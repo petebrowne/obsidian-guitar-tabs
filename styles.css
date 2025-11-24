@@ -1,0 +1,110 @@
+.guitar-tabs-track {
+  padding-block: 2em;
+  padding-inline: 0.5em;
+}
+
+.guitar-tabs-track > *:not(:last-child) {
+  margin-bottom: 3em;
+}
+
+.guitar-tabs-info {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 2em;
+  font-size: var(--font-ui-smaller);
+
+  & > div {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    gap: 0.5em;
+  }
+
+  dt {
+    font-weight: bold;
+    color: var(--text-muted);
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.guitar-tabs-staff {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.guitar-tabs-staff-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--background-modifier-border);
+}
+
+.guitar-tabs-staff-line {
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  background-color: var(--background-modifier-border);
+  z-index: 1;
+}
+
+.guitar-tabs-measure {
+  padding-inline: 1.5em;
+  border-width: 0;
+  border-inline-end-width: 1px;
+  border-style: solid;
+  border-color: var(--text-faint);
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 2em;
+  position: relative;
+  z-index: 2;
+}
+
+.guitar-tabs-beat {
+  margin-block-start: -0.35em;
+  margin-block-end: -0.35em;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 0.75em;
+  position: relative;
+}
+
+.guitar-tabs-chord {
+  position: absolute;
+  bottom: calc(100% + 0.25em);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+  text-align: center;
+  width: auto;
+}
+
+.guitar-tabs-string {
+  height: 1em;
+  padding-inline: 0.25em;
+  line-height: 1em;
+  background-color: var(--background-primary);
+  text-align: center;
+  font-size: var(--font-ui-smaller);
+  font-weight: bold;
+  font-family: var(--font-monospace);
+}
+
+.guitar-tabs-string:empty {
+  padding: 0;
+}
