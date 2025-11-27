@@ -2,7 +2,7 @@
 
 import { chunk, range } from "es-toolkit/compat";
 import { Muted, type TabMeasure, type TabTrack } from "./types";
-import { isStandardTuning, ordinalize } from "./utils";
+import { isStandardTuning, ordinalize, toChordName } from "./utils";
 
 interface TabTrackViewViewProps {
   track: TabTrack;
@@ -93,7 +93,7 @@ function TabMeasureView({ measure, stringCount }: TabMeasureViewProps) {
       {measure.beats.map((beat, index) => (
         <div key={index} className="guitar-tabs-beat">
           {beat.chord ? (
-            <div className="guitar-tabs-chord">{beat.chord.symbol}</div>
+            <div className="guitar-tabs-chord">{toChordName(beat.chord)}</div>
           ) : null}
           {range(0, stringCount).map((string) => {
             const note = beat.notes[string + 1];

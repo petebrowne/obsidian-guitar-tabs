@@ -1,6 +1,10 @@
 .guitar-tabs-track {
   padding-block: 2em;
   padding-inline: 0.5em;
+
+  &:has(.guitar-tabs-chord) {
+    padding-block-start: 4em;
+  }
 }
 
 .guitar-tabs-track > *:not(:last-child) {
@@ -85,9 +89,10 @@
 
 .guitar-tabs-chord {
   position: absolute;
-  bottom: calc(100% + 0.25em);
-  left: 50%;
-  transform: translateX(-50%);
+  top: -1.5em;
+  left: calc(50% - 1em);
+  transform: rotate(-45deg);
+  transform-origin: top left;
   font-size: var(--font-ui-smaller);
   color: var(--text-faint);
   text-align: center;

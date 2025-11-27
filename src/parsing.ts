@@ -1,4 +1,4 @@
-import { Chord, Interval, Note, type NoteType } from "tonal";
+import { Interval, Note, type NoteType } from "tonal";
 import {
   DROP_D_TUNING,
   STANDARD_TIME_SIGNATURE,
@@ -14,6 +14,7 @@ import {
   type TabTrack,
   type Tuning,
 } from "./types";
+import { getChord } from "./utils";
 
 export function parseTabTrack(input: string): TabTrack {
   let tuning = STANDARD_TUNING;
@@ -75,7 +76,7 @@ function parseTuning(input: string): Tuning {
 
 const NOTE_OCTAVE_MAPS: Record<number, number[]> = {
   6: [2, 2, 3, 3, 3, 4], // guitar: E2 A2 D3 G3 B3 E4
-  4: [3, 4, 4, 4], // uke: G3 C4 E4 A4
+  4: [4, 4, 4, 4], // uke: G3 C4 E4 A4
 };
 
 function getBestOctave(stringIndex: number, stringCount: number): number {
@@ -108,12 +109,7 @@ function parseTabBeat(input: string, tuning: Tuning, capo = 0): TabBeat {
         return [index + 1, parseTabNote(value, stringNote, capo)];
       }),
   ) as TabBeatNotes;
-  const chords = Chord.detect(
-    Object.values(notes)
-      .filter((note) => note !== Muted && note !== null)
-      .map((note) => note.note.name),
-  );
-  const chord = chords[0] ? Chord.get(chords[0]) : undefined;
+  const chord = getChord(notes);
   return {
     duration: "quarter",
     chord,

@@ -18,7 +18,7 @@ export const DROP_D_TUNING: Tuning = [
   Note.get("E4"),
 ];
 export const UKELELE_TUNING: Tuning = [
-  Note.get("G3"),
+  Note.get("G4"),
   Note.get("C4"),
   Note.get("E4"),
   Note.get("A4"),
