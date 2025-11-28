@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: index is fine */
 
 import { chunk, range } from "es-toolkit/compat";
+import { ChordDiagram } from "./chord-diagram";
 import { Muted, type TabMeasure, type TabTrack } from "./types";
 import { isStandardTuning, ordinalize, toChordName } from "./utils";
 
@@ -10,7 +11,7 @@ interface TabTrackViewViewProps {
 
 export function TabTrackView({ track }: TabTrackViewViewProps) {
   return (
-    <div className="guitar-tabs-track">
+    <div className="gt-tab-track">
       <TabInfoView track={track} />
       {chunk(track.measures, 2).map((measures, index) => (
         <TabStaffView
@@ -19,6 +20,32 @@ export function TabTrackView({ track }: TabTrackViewViewProps) {
           stringCount={track.tuning.length}
         />
       ))}
+    </div>
+  );
+}
+
+interface ChordTrackViewProps {
+  track: TabTrack;
+}
+
+export function ChordTrackView({ track }: ChordTrackViewProps) {
+  const beats = track.measures.flatMap((measure) =>
+    measure.beats.map((beat) => beat).filter((beat) => beat.chord != null),
+  );
+  return (
+    <div className="gt-chord-track">
+      <TabInfoView track={track} />
+      <div className="gt-diagrams">
+        {beats.map((beat, i) =>
+          beat.chord ? (
+            <ChordDiagram
+              key={`${beat.chord.symbol}-${i}`}
+              chord={beat.chord}
+              strings={beat.notes}
+            />
+          ) : null,
+        )}
+      </div>
     </div>
   );
 }
@@ -32,7 +59,7 @@ function TabInfoView({ track }: TabInfoViewProps) {
   if (standardTuning && !track.capo) return null;
 
   return (
-    <dl className="guitar-tabs-info">
+    <dl className="gt-info">
       {!standardTuning && (
         <div>
           <dt>Tuning:</dt>
@@ -57,16 +84,12 @@ interface StaffViewProps {
 function TabStaffView({ measures, stringCount = 6 }: StaffViewProps) {
   const lineSpacing = 100 / (stringCount - 1);
   return (
-    <div className="guitar-tabs-staff">
-      <div
-        className="guitar-tabs-staff-bar"
-        aria-hidden="true"
-        role="presentation"
-      >
+    <div className="gt-staff">
+      <div className="gt-staff-bar" aria-hidden="true" role="presentation">
         {range(1, stringCount - 1).map((line) => (
           <div
             key={line}
-            className="guitar-tabs-staff-line"
+            className="gt-staff-line"
             style={{ top: `${lineSpacing * line}%` }}
           />
         ))}
@@ -89,16 +112,16 @@ interface TabMeasureViewProps {
 
 function TabMeasureView({ measure, stringCount }: TabMeasureViewProps) {
   return (
-    <div className="guitar-tabs-measure">
+    <div className="gt-measure">
       {measure.beats.map((beat, index) => (
-        <div key={index} className="guitar-tabs-beat">
+        <div key={index} className="gt-beat">
           {beat.chord ? (
-            <div className="guitar-tabs-chord">{toChordName(beat.chord)}</div>
+            <div className="gt-chord">{toChordName(beat.chord)}</div>
           ) : null}
           {range(0, stringCount).map((string) => {
             const note = beat.notes[string + 1];
             return (
-              <div key={string} className="guitar-tabs-string">
+              <div key={string} className="gt-string">
                 {note ? (note === Muted ? "×" : note.fret) : null}
               </div>
             );

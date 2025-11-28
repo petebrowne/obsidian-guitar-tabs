@@ -3,6 +3,10 @@ import { Chord as TonalChord } from "tonal";
 import { STANDARD_TUNING } from "./constants";
 import { type Chord, Muted, type TabBeatNotes, type Tuning } from "./types";
 
+export function isNonNullable<T>(value: T): value is NonNullable<T> {
+  return value != null;
+}
+
 export function isStandardTuning(tuning: Tuning): boolean {
   return (
     tuning.map((note) => note.name).join(" ") ===
@@ -39,12 +43,62 @@ export function getChord(notes: TabBeatNotes): Chord | undefined {
     ],
     ["asc", "asc"],
   );
-  if (sorted[0]?.symbol === "D4/F") {
-    console.log(chords.map((chord) => TonalChord.get(chord)));
-  }
   return sorted[0];
 }
 
 export function toChordName(chord: Chord): string {
   return chord.symbol.replace("M", "").replace(/\/\w[b#]?$/, "");
+}
+
+export function getFrettedNoteRange(
+  strings: TabBeatNotes,
+): [number | undefined, number | undefined] {
+  let lowestFret: number | undefined;
+  let highestFret: number | undefined;
+  for (const fret of Object.values(strings)) {
+    if (fret == null || fret === Muted) continue;
+
+    const fretNumber = fret.fret;
+    if (fretNumber === 0) continue;
+
+    if (lowestFret == null || fretNumber < lowestFret) {
+      lowestFret = fretNumber;
+    }
+    if (highestFret == null || fretNumber > highestFret) {
+      highestFret = fretNumber;
+    }
+  }
+  return [lowestFret, highestFret];
+}
+
+export interface Barre {
+  fret: number;
+  start: number;
+  end: number;
+}
+
+export function getBarre(strings: TabBeatNotes): Barre | undefined {
+  let barre: Barre | undefined;
+  for (const [string, fret] of Object.entries(strings)) {
+    const stringNumber = parseInt(string, 10);
+    if (fret == null || fret === Muted || fret.fret === 0) {
+      barre = undefined;
+      continue;
+    }
+    if (barre == null) {
+      barre = {
+        fret: fret.fret,
+        start: stringNumber,
+        end: stringNumber,
+      };
+    } else if (fret.fret < barre.fret) {
+      barre = undefined;
+    } else {
+      barre.end = stringNumber;
+    }
+  }
+  if (barre == null || barre.end - barre.start <= 2) {
+    return undefined;
+  }
+  return barre;
 }
