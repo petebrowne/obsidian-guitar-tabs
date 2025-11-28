@@ -3,13 +3,14 @@
 import { chunk, range } from "es-toolkit/compat";
 import { ChordDiagram } from "./chord-diagram";
 import { Muted, type TabMeasure, type TabTrack } from "./types";
-import { isStandardTuning, ordinalize, toChordName } from "./utils";
+import { isStandardTuning, ordinalize } from "./utils";
 
 interface TabTrackViewViewProps {
   track: TabTrack;
 }
 
 export function TabTrackView({ track }: TabTrackViewViewProps) {
+  console.log(track);
   return (
     <div className="gt-tab-track">
       <TabInfoView track={track} />
@@ -42,6 +43,7 @@ export function ChordTrackView({ track }: ChordTrackViewProps) {
               key={`${beat.chord.symbol}-${i}`}
               chord={beat.chord}
               strings={beat.notes}
+              tuning={track.tuning}
             />
           ) : null,
         )}
@@ -114,10 +116,12 @@ function TabMeasureView({ measure, stringCount }: TabMeasureViewProps) {
   return (
     <div className="gt-measure">
       {measure.beats.map((beat, index) => (
-        <div key={index} className="gt-beat">
-          {beat.chord ? (
-            <div className="gt-chord">{toChordName(beat.chord)}</div>
-          ) : null}
+        <div
+          key={index}
+          className="gt-beat"
+          data-duration={beat.duration}
+          data-dotted={beat.dotted ? "true" : undefined}
+        >
           {range(0, stringCount).map((string) => {
             const note = beat.notes[string + 1];
             return (

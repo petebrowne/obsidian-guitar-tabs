@@ -30,16 +30,12 @@
 /* MARK: Tabs
    -------------------------------------------------------------------------- */
 
-.gt-track {
+.gt-tab-track {
   padding-block: 2em;
   padding-inline: 0.5em;
-
-  &:has(.gt-chord) {
-    padding-block-start: 4em;
-  }
 }
 
-.gt-track > *:not(:last-child) {
+.gt-tab-track > *:not(:last-child) {
   margin-bottom: 3em;
 }
 
@@ -70,7 +66,7 @@
 }
 
 .gt-measure {
-  padding-inline: 1.5em;
+  padding-inline-start: 1em;
   border-width: 0;
   border-inline-end-width: 1px;
   border-style: solid;
@@ -78,7 +74,6 @@
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  gap: 2em;
   position: relative;
   z-index: 2;
 }
@@ -91,18 +86,41 @@
   align-items: center;
   gap: 0.75em;
   position: relative;
-}
+  --gt-beat-duration: 1;
+  --gt-beat-dotted: 1;
+  margin-inline-end: calc(
+    var(--gt-beat-duration) *
+    var(--gt-beat-dotted) *
+    0.15em
+  );
 
-.gt-chord {
-  position: absolute;
-  top: -1.5em;
-  left: calc(50% - 1em);
-  transform: rotate(-45deg);
-  transform-origin: top left;
-  font-size: var(--font-ui-smaller);
-  color: var(--text-faint);
-  text-align: center;
-  width: auto;
+  &[data-dotted="true"] {
+    --gt-beat-dotted: 1.5;
+  }
+
+  &[data-duration="whole"] {
+    --gt-beat-duration: 64;
+  }
+
+  &[data-duration="half"] {
+    --gt-beat-duration: 32;
+  }
+
+  &[data-duration="quarter"] {
+    --gt-beat-duration: 16;
+  }
+
+  &[data-duration="eighth"] {
+    --gt-beat-duration: 8;
+  }
+
+  &[data-duration="sixteenth"] {
+    --gt-beat-duration: 4;
+  }
+
+  &[data-duration="thirty-second"] {
+    --gt-beat-duration: 2;
+  }
 }
 
 .gt-string {
@@ -132,19 +150,6 @@
   padding: 0;
 }
 
-.gt-diagrams {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  justify-content: flex-start;
-  gap: 1em;
-  flex-wrap: wrap;
-
-  .gt-chord-diagram {
-    width: 120px;
-  }
-}
-
 .gt-chord-diagram {
   display: flex;
   flex-direction: column;
@@ -157,5 +162,18 @@
   figcaption {
     font-weight: bold;
     font-size: var(--font-ui-small);
+  }
+}
+
+.gt-diagrams {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 1em;
+  flex-wrap: wrap;
+
+  .gt-chord-diagram {
+    width: 120px;
   }
 }

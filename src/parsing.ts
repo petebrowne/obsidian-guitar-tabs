@@ -8,17 +8,30 @@ import {
 import {
   Muted,
   type TabBeat,
+  type TabBeatDuration,
   type TabBeatNotes,
   type TabMeasure,
   type TabNote,
   type TabTrack,
+  type TimeSignature,
   type Tuning,
 } from "./types";
 import { getChord } from "./utils";
 
+interface TrackOptions {
+  tuning: Tuning;
+  capo: number | undefined;
+  duration: TabBeatDuration;
+  timeSignature: TimeSignature;
+}
+
 export function parseTabTrack(input: string): TabTrack {
-  let tuning = STANDARD_TUNING;
-  let capo: number | undefined;
+  const trackOptions: TrackOptions = {
+    tuning: STANDARD_TUNING,
+    capo: undefined,
+    duration: "quarter",
+    timeSignature: STANDARD_TIME_SIGNATURE,
+  };
   const measures: TabMeasure[] = [];
   let measure: TabMeasure = {
     timeSignature: STANDARD_TIME_SIGNATURE,
@@ -28,26 +41,30 @@ export function parseTabTrack(input: string): TabTrack {
   for (const inputLine of input.split("\n")) {
     const line = inputLine.trim();
     if (isTuningLine(line)) {
-      tuning = parseTuning(line);
+      trackOptions.tuning = parseTuning(line);
       continue;
     }
     if (isCapoLine(line)) {
-      capo = parseCapo(line);
+      trackOptions.capo = parseCapo(line);
+      continue;
+    }
+    if (isDurationLine(line)) {
+      trackOptions.duration = parseDuration(line);
       continue;
     }
     if (line === "") {
       measure = {
-        timeSignature: STANDARD_TIME_SIGNATURE,
+        timeSignature: trackOptions.timeSignature,
         beats: [],
       };
       measures.push(measure);
       continue;
     }
-    measure.beats.push(parseTabBeat(line, tuning, capo));
+    measure.beats.push(parseTabBeat(line, trackOptions));
   }
   return {
-    tuning,
-    capo,
+    tuning: trackOptions.tuning,
+    capo: trackOptions.capo,
     measures: measures.filter((measure) => measure.beats.length > 0),
   };
 }
@@ -95,10 +112,34 @@ function parseCapo(input: string): number | undefined {
   return Number.isNaN(capo) ? undefined : capo;
 }
 
-function parseTabBeat(input: string, tuning: Tuning, capo = 0): TabBeat {
+function isDurationLine(input: string): boolean {
+  return input.toUpperCase().startsWith("DURATION: ");
+}
+
+function parseDuration(input: string): TabBeatDuration {
+  const duration = input.toUpperCase().replace("DURATION: ", "").trim();
+  if (duration.endsWith("64")) return "sixty-fourth";
+  if (duration.endsWith("32")) return "thirty-second";
+  if (duration.endsWith("16")) return "sixteenth";
+  if (duration.endsWith("8")) return "eighth";
+  if (duration.endsWith("4")) return "quarter";
+  if (duration.endsWith("2")) return "half";
+  if (duration.endsWith("1")) return "whole";
+  throw new Error(`Unknown duration: ${duration}`);
+}
+
+function parseTabBeat(
+  input: string,
+  { tuning, capo = 0, duration }: TrackOptions,
+): TabBeat {
   const stringCount = tuning.length;
+  const [noteInputs, durationInput] = input.split("/");
+  if (noteInputs == null) {
+    throw new Error(`Invalid beat input: ${input}`);
+  }
+  const parsedDuration = parseTabBeatDuration(durationInput);
   const notes = Object.fromEntries(
-    input
+    noteInputs
       .split(/\s+/)
       .slice(0, stringCount)
       .map((value, index) => {
@@ -111,10 +152,34 @@ function parseTabBeat(input: string, tuning: Tuning, capo = 0): TabBeat {
   ) as TabBeatNotes;
   const chord = getChord(notes);
   return {
-    duration: "quarter",
+    duration: parsedDuration?.duration ?? duration,
+    dotted: parsedDuration?.dotted,
     chord,
     notes,
   };
+}
+
+interface ParsedTabBeatDuration {
+  duration: TabBeatDuration;
+  dotted?: boolean;
+}
+
+function parseTabBeatDuration(
+  input: string | null | undefined,
+): ParsedTabBeatDuration | undefined {
+  if (input == null) return undefined;
+
+  const [duration, dotted] = input.split(".");
+  if (duration == null) return undefined;
+
+  try {
+    return {
+      duration: parseDuration(duration),
+      dotted: dotted !== undefined,
+    };
+  } catch (_error) {
+    return undefined;
+  }
 }
 
 function parseTabNote(

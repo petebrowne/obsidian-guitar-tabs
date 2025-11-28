@@ -1,10 +1,11 @@
 import { range } from "es-toolkit/compat";
-import { type Chord, Muted, type TabBeatNotes } from "./types";
+import { type Chord, Muted, type TabBeatNotes, type Tuning } from "./types";
 import { getBarre, getFrettedNoteRange, toChordName } from "./utils";
 
 interface ChordDiagramProps {
   chord: Chord;
   strings: TabBeatNotes;
+  tuning: Tuning;
 }
 
 const CANVAS_WIDTH = 120;
@@ -15,8 +16,8 @@ const STRING_SPACING = 14;
 const FRETS = 5;
 const FRET_SPACING = BOARD_HEIGHT / FRETS;
 
-export function ChordDiagram({ chord, strings }: ChordDiagramProps) {
-  const stringCount = Object.keys(strings).length;
+export function ChordDiagram({ chord, strings, tuning }: ChordDiagramProps) {
+  const stringCount = tuning.length;
   const stringDivisions = stringCount - 1;
   const boardWidth = stringDivisions * STRING_SPACING;
   const startBoardX = (CANVAS_WIDTH - boardWidth) / 2;
