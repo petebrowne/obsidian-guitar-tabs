@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { parseTabTrack } from "../src/parsing";
+import { parseTab } from "../src/parsing";
 import { ChordTrackView, TabTrackView } from "../src/ui";
 
 import "./obsidian-theme.css";
@@ -10,7 +10,7 @@ function App() {
   return (
     <div className="preview-container">
       <ChordTrackView
-        track={parseTabTrack(
+        track={parseTab(
           `
 - 0 2 2 2 0
 - 0 2 1 2 0
@@ -24,7 +24,7 @@ function App() {
         )}
       />
       <ChordTrackView
-        track={parseTabTrack(
+        track={parseTab(
           `tuning: uke
 3 5 6 5
 5 4 3 3
@@ -33,7 +33,7 @@ function App() {
         )}
       />
       <TabTrackView
-        track={parseTabTrack(
+        track={parseTab(
           `
 duration: 1/8
 - - 7

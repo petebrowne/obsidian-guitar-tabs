@@ -1,22 +1,22 @@
-/** biome-ignore-all lint/suspicious/noArrayIndexKey: index is fine */
-
 import { chunk, range } from "es-toolkit/compat";
 import { ChordDiagram } from "./chord-diagram";
-import { Muted, type TabMeasure, type TabTrack } from "./types";
-import { isStandardTuning, ordinalize } from "./utils";
+import { collectChords } from "./music/chord";
+import type { Measure, Track } from "./music/types";
+import { isStandardTuning } from "./music/utils";
+import { ordinalize } from "./utils";
 
 interface TabTrackViewViewProps {
-  track: TabTrack;
+  track: Track;
 }
 
 export function TabTrackView({ track }: TabTrackViewViewProps) {
-  console.log(track);
   return (
     <div className="gt-tab-track">
       <TabInfoView track={track} />
+      {/* <TabViewer track={track} /> */}
       {chunk(track.measures, 2).map((measures, index) => (
         <TabStaffView
-          key={index}
+          key={`${measures[0]?.id}-${measures[1]?.id}`}
           measures={measures}
           stringCount={track.tuning.length}
         />
@@ -26,34 +26,25 @@ export function TabTrackView({ track }: TabTrackViewViewProps) {
 }
 
 interface ChordTrackViewProps {
-  track: TabTrack;
+  track: Track;
 }
 
 export function ChordTrackView({ track }: ChordTrackViewProps) {
-  const beats = track.measures.flatMap((measure) =>
-    measure.beats.map((beat) => beat).filter((beat) => beat.chord != null),
-  );
+  const chords = collectChords(track);
   return (
     <div className="gt-chord-track">
       <TabInfoView track={track} />
       <div className="gt-diagrams">
-        {beats.map((beat, i) =>
-          beat.chord ? (
-            <ChordDiagram
-              key={`${beat.chord.symbol}-${i}`}
-              chord={beat.chord}
-              strings={beat.notes}
-              tuning={track.tuning}
-            />
-          ) : null,
-        )}
+        {chords.map((chord) => (
+          <ChordDiagram key={chord.id} chord={chord} tuning={track.tuning} />
+        ))}
       </div>
     </div>
   );
 }
 
 interface TabInfoViewProps {
-  track: TabTrack;
+  track: Track;
 }
 
 function TabInfoView({ track }: TabInfoViewProps) {
@@ -65,7 +56,7 @@ function TabInfoView({ track }: TabInfoViewProps) {
       {!standardTuning && (
         <div>
           <dt>Tuning:</dt>
-          <dd>{track.tuning.map((note) => note.pc).join(" ")}</dd>
+          <dd>{track.tuning.map((note) => note.name).join(" ")}</dd>
         </div>
       )}
       {!!track.capo && (
@@ -79,7 +70,7 @@ function TabInfoView({ track }: TabInfoViewProps) {
 }
 
 interface StaffViewProps {
-  measures: TabMeasure[];
+  measures: Measure[];
   stringCount: number;
 }
 
@@ -96,9 +87,9 @@ function TabStaffView({ measures, stringCount = 6 }: StaffViewProps) {
           />
         ))}
       </div>
-      {measures.map((measure, index) => (
+      {measures.map((measure) => (
         <TabMeasureView
-          key={index}
+          key={measure.id}
           measure={measure}
           stringCount={stringCount}
         />
@@ -108,25 +99,27 @@ function TabStaffView({ measures, stringCount = 6 }: StaffViewProps) {
 }
 
 interface TabMeasureViewProps {
-  measure: TabMeasure;
+  measure: Measure;
   stringCount: number;
 }
 
 function TabMeasureView({ measure, stringCount }: TabMeasureViewProps) {
   return (
     <div className="gt-measure">
-      {measure.beats.map((beat, index) => (
+      {measure.beats.map((beat) => (
         <div
-          key={index}
+          key={beat.id}
           className="gt-beat"
           data-duration={beat.duration}
           data-dotted={beat.dotted ? "true" : undefined}
         >
-          {range(0, stringCount).map((string) => {
-            const note = beat.notes[string + 1];
+          {range(0, stringCount).map((stringIndex) => {
+            const note = beat.notes.find(
+              (note) => note.stringIndex === stringIndex,
+            );
             return (
-              <div key={string} className="gt-string">
-                {note ? (note === Muted ? "×" : note.fret) : null}
+              <div key={stringIndex} className="gt-string">
+                {note ? (note.muted ? "×" : note.fret) : null}
               </div>
             );
           })}

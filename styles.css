@@ -98,27 +98,27 @@
     --gt-beat-dotted: 1.5;
   }
 
-  &[data-duration="whole"] {
+  &[data-duration="1"] {
     --gt-beat-duration: 64;
   }
 
-  &[data-duration="half"] {
+  &[data-duration="2"] {
     --gt-beat-duration: 32;
   }
 
-  &[data-duration="quarter"] {
+  &[data-duration="4"] {
     --gt-beat-duration: 16;
   }
 
-  &[data-duration="eighth"] {
+  &[data-duration="8"] {
     --gt-beat-duration: 8;
   }
 
-  &[data-duration="sixteenth"] {
+  &[data-duration="16"] {
     --gt-beat-duration: 4;
   }
 
-  &[data-duration="thirty-second"] {
+  &[data-duration="32"] {
     --gt-beat-duration: 2;
   }
 }

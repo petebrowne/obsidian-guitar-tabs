@@ -1,5 +1,5 @@
-import { getPitch } from "./music/pitch";
-import type { TimeSignature, Tuning } from "./music/types";
+import { getPitch } from "./pitch";
+import type { TimeSignature, Tuning } from "./types";
 
 export const STANDARD_TUNING: Tuning = [
   getPitch("E2"),

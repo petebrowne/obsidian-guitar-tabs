@@ -1,39 +1,38 @@
-import { Interval, Note, type NoteType } from "tonal";
 import {
   DROP_D_TUNING,
   STANDARD_TIME_SIGNATURE,
   STANDARD_TUNING,
   UKELELE_TUNING,
 } from "./constants";
+import { getPitch } from "./music/pitch";
 import {
-  Muted,
-  type TabBeat,
-  type TabBeatDuration,
-  type TabBeatNotes,
-  type TabMeasure,
-  type TabNote,
-  type TabTrack,
+  type Beat,
+  Duration,
+  type Measure,
+  type Note,
   type TimeSignature,
+  type Track,
   type Tuning,
-} from "./types";
-import { getChord } from "./utils";
+} from "./music/types";
+import { generateId, isNonNullable } from "./utils";
 
 interface TrackOptions {
   tuning: Tuning;
   capo: number | undefined;
-  duration: TabBeatDuration;
+  duration: Duration;
   timeSignature: TimeSignature;
 }
 
-export function parseTabTrack(input: string): TabTrack {
+export function parseTab(input: string): Track {
   const trackOptions: TrackOptions = {
     tuning: STANDARD_TUNING,
     capo: undefined,
-    duration: "quarter",
+    duration: Duration.QUARTER,
     timeSignature: STANDARD_TIME_SIGNATURE,
   };
-  const measures: TabMeasure[] = [];
-  let measure: TabMeasure = {
+  const measures: Measure[] = [];
+  let measure: Measure = {
+    id: generateId("measure"),
     timeSignature: STANDARD_TIME_SIGNATURE,
     beats: [],
   };
@@ -54,13 +53,14 @@ export function parseTabTrack(input: string): TabTrack {
     }
     if (line === "") {
       measure = {
+        id: generateId("measure"),
         timeSignature: trackOptions.timeSignature,
         beats: [],
       };
       measures.push(measure);
       continue;
     }
-    measure.beats.push(parseTabBeat(line, trackOptions));
+    measure.beats.push(parseBeat(line, trackOptions));
   }
   return {
     tuning: trackOptions.tuning,
@@ -73,7 +73,7 @@ function isTuningLine(input: string): boolean {
   return input.toUpperCase().startsWith("TUNING: ");
 }
 
-function parseTuning(input: string): Tuning {
+export function parseTuning(input: string): Tuning {
   const tuningInput = input.toUpperCase().replace("TUNING: ", "");
   if (tuningInput.replace(/[^\w]/g, "") === "DROPD") {
     return DROP_D_TUNING;
@@ -84,10 +84,8 @@ function parseTuning(input: string): Tuning {
 
   const noteNames = tuningInput.split(/\s+/);
   return noteNames.map((name, i) => {
-    if (/\d$/.test(name)) return Note.get(name);
-
     const octave = getBestOctave(i, noteNames.length);
-    return Note.get(`${name}${octave}`);
+    return getPitch(name, octave);
   });
 }
 
@@ -116,55 +114,49 @@ function isDurationLine(input: string): boolean {
   return input.toUpperCase().startsWith("DURATION: ");
 }
 
-function parseDuration(input: string): TabBeatDuration {
+function parseDuration(input: string): Duration {
   const duration = input.toUpperCase().replace("DURATION: ", "").trim();
-  if (duration.endsWith("64")) return "sixty-fourth";
-  if (duration.endsWith("32")) return "thirty-second";
-  if (duration.endsWith("16")) return "sixteenth";
-  if (duration.endsWith("8")) return "eighth";
-  if (duration.endsWith("4")) return "quarter";
-  if (duration.endsWith("2")) return "half";
-  if (duration.endsWith("1")) return "whole";
+  if (duration.endsWith("64")) return 64;
+  if (duration.endsWith("32")) return 32;
+  if (duration.endsWith("16")) return 16;
+  if (duration.endsWith("8")) return 8;
+  if (duration.endsWith("4")) return 4;
+  if (duration.endsWith("2")) return 2;
+  if (duration.endsWith("1")) return 1;
   throw new Error(`Unknown duration: ${duration}`);
 }
 
-function parseTabBeat(
+export function parseBeat(
   input: string,
-  { tuning, capo = 0, duration }: TrackOptions,
-): TabBeat {
-  const stringCount = tuning.length;
+  {
+    tuning = STANDARD_TUNING,
+    capo = 0,
+    duration = Duration.QUARTER,
+  }: Partial<TrackOptions> = {},
+): Beat {
   const [noteInputs, durationInput] = input.split("/");
   if (noteInputs == null) {
-    throw new Error(`Invalid beat input: ${input}`);
+    throw new Error(`Invalid beat input: "${input}"`);
   }
-  const parsedDuration = parseTabBeatDuration(durationInput);
-  const notes = Object.fromEntries(
-    noteInputs
-      .split(/\s+/)
-      .slice(0, stringCount)
-      .map((value, index) => {
-        const stringNote = tuning[index];
-        if (stringNote == null) {
-          throw new Error(`String ${index + 1} not found in tuning`);
-        }
-        return [index + 1, parseTabNote(value, stringNote, capo)];
-      }),
-  ) as TabBeatNotes;
-  const chord = getChord(notes);
+  const parsedDuration = parseBeatDuration(durationInput);
+  const notes: Note[] = noteInputs
+    .split(/\s+/)
+    .map((value, index) => parseNote(index, value, { tuning, capo }))
+    .filter(isNonNullable);
   return {
+    id: generateId("beat"),
     duration: parsedDuration?.duration ?? duration,
     dotted: parsedDuration?.dotted,
-    chord,
     notes,
   };
 }
 
 interface ParsedTabBeatDuration {
-  duration: TabBeatDuration;
+  duration: Duration;
   dotted?: boolean;
 }
 
-function parseTabBeatDuration(
+function parseBeatDuration(
   input: string | null | undefined,
 ): ParsedTabBeatDuration | undefined {
   if (input == null) return undefined;
@@ -175,28 +167,26 @@ function parseTabBeatDuration(
   try {
     return {
       duration: parseDuration(duration),
-      dotted: dotted !== undefined,
+      dotted: dotted !== undefined ? true : undefined,
     };
   } catch (_error) {
     return undefined;
   }
 }
 
-function parseTabNote(
+function parseNote(
+  stringIndex: number,
   input: string,
-  baseNote: NoteType,
-  capo = 0,
-): TabNote | typeof Muted | null {
-  if (["", "-"].includes(input)) return null;
-  if (["x", "X"].includes(input)) return Muted;
+  { tuning = STANDARD_TUNING, capo = 0 }: Partial<TrackOptions> = {},
+): Note | null {
+  const stringPitch = tuning[stringIndex];
+  if (["", "-"].includes(input) || stringPitch == null) return null;
+
+  if (["x", "X"].includes(input)) return { stringIndex, muted: true };
 
   const fret = parseInt(input, 10);
   if (Number.isNaN(fret)) return null;
 
-  const note = Note.get(
-    Note.transpose(baseNote, Interval.fromSemitones(fret + capo)),
-  );
-  if (note.empty) return null;
-
-  return { fret, note };
+  const pitch = getPitch(stringPitch.midi + fret + capo);
+  return { stringIndex, fret, pitch };
 }

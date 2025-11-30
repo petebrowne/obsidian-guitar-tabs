@@ -1,10 +1,9 @@
 import { range } from "es-toolkit/compat";
-import { type Chord, Muted, type TabBeatNotes, type Tuning } from "./types";
-import { getBarre, getFrettedNoteRange, toChordName } from "./utils";
+import type { Chord, Tuning } from "./music/types";
+import { getBarre, getFrettedNoteRange } from "./music/utils";
 
 interface ChordDiagramProps {
   chord: Chord;
-  strings: TabBeatNotes;
   tuning: Tuning;
 }
 
@@ -16,22 +15,22 @@ const STRING_SPACING = 14;
 const FRETS = 5;
 const FRET_SPACING = BOARD_HEIGHT / FRETS;
 
-export function ChordDiagram({ chord, strings, tuning }: ChordDiagramProps) {
+export function ChordDiagram({ chord, tuning }: ChordDiagramProps) {
   const stringCount = tuning.length;
   const stringDivisions = stringCount - 1;
   const boardWidth = stringDivisions * STRING_SPACING;
   const startBoardX = (CANVAS_WIDTH - boardWidth) / 2;
-  const [lowestFret, highestFret] = getFrettedNoteRange(strings);
+  const [lowestFret, highestFret] = getFrettedNoteRange(chord.notes);
   const position =
     lowestFret != null && highestFret != null && highestFret > FRETS
       ? lowestFret
       : undefined;
-  const barre = getBarre(strings);
+  const barre = getBarre(chord.notes);
   return (
     <figure className="gt-chord-diagram">
-      <figcaption>{toChordName(chord)}</figcaption>
+      <figcaption>{chord.name}</figcaption>
       <svg viewBox={`0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`} width="100%">
-        <title>{chord.symbol}</title>
+        <title>{chord.name}</title>
         {position != null && (
           <text
             fontSize="10px"
@@ -52,44 +51,41 @@ export function ChordDiagram({ chord, strings, tuning }: ChordDiagramProps) {
           frets={FRETS}
           nut={position == null}
         />
-        {Object.entries(strings).map(([string, fret]) => {
-          if (fret == null) return null;
-
-          const stringIndex = parseInt(string, 10) - 1;
-          if (fret === Muted) {
+        {chord.notes.map((note) => {
+          if (note.muted) {
             return (
               <MutedNote
-                key={string}
-                cx={startBoardX + stringIndex * STRING_SPACING}
+                key={note.stringIndex}
+                cx={startBoardX + note.stringIndex * STRING_SPACING}
                 cy={START_BOARD_Y + -0.65 * FRET_SPACING}
               />
             );
           }
-          if (fret.fret === 0) {
+          if (note.fret === 0) {
             return (
               <FretNote
-                key={string}
-                cx={startBoardX + stringIndex * STRING_SPACING}
+                key={note.stringIndex}
+                cx={startBoardX + note.stringIndex * STRING_SPACING}
                 cy={START_BOARD_Y + -0.65 * FRET_SPACING}
                 open
               />
             );
           }
-          const fretNumber = adjustFretNumber(fret.fret, position);
+          const fretNumber = adjustFretNumber(note.fret, position);
           if (fretNumber > FRETS) return null;
 
           return (
             <FretNote
-              key={string}
-              cx={startBoardX + stringIndex * STRING_SPACING}
+              key={note.stringIndex}
+              cx={startBoardX + note.stringIndex * STRING_SPACING}
               cy={START_BOARD_Y + (fretNumber - 0.5) * FRET_SPACING}
             />
           );
         })}
         {barre != null && (
           <BarreIndicator
-            x1={startBoardX + (barre.start - 1) * STRING_SPACING}
-            x2={startBoardX + (barre.end - 1) * STRING_SPACING}
+            x1={startBoardX + barre.start * STRING_SPACING}
+            x2={startBoardX + barre.end * STRING_SPACING}
             y={
               START_BOARD_Y +
               (adjustFretNumber(barre.fret, position) - 0.5) * FRET_SPACING
