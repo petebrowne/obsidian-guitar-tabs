@@ -10,9 +10,17 @@ interface TabTrackViewViewProps {
 }
 
 export function TabTrackView({ track }: TabTrackViewViewProps) {
+  const chords = collectChords(track);
   return (
     <div className="gt-tab-track">
       <TabInfoView track={track} />
+      {chords.length > 0 && (
+        <div className="gt-diagrams">
+          {chords.map((chord) => (
+            <ChordDiagram key={chord.id} chord={chord} tuning={track.tuning} />
+          ))}
+        </div>
+      )}
       {/* <TabViewer track={track} /> */}
       {chunk(track.measures, 2).map((measures, index) => (
         <TabStaffView
