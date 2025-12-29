@@ -23,4 +23,7 @@ export const UKELELE_TUNING: Tuning = [
   getPitch("E4"),
   getPitch("A4"),
 ];
-export const STANDARD_TIME_SIGNATURE: TimeSignature = [4, 4];
+export const STANDARD_TIME_SIGNATURE: TimeSignature = {
+  beats: 4,
+  beatValue: 4,
+};

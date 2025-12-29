@@ -27,7 +27,7 @@
   }
 }
 
-/* MARK: Tabs
+/* MARK: Tabs (version 1)
    -------------------------------------------------------------------------- */
 
 .gt-tab-track {
@@ -136,6 +136,18 @@
 
 .gt-string:empty {
   padding: 0;
+}
+
+/* MARK: Tabs (version 2)
+   -------------------------------------------------------------------------- */
+
+.gt-tab-track {
+  --gt-tab-background: var(--background-primary);
+  --gt-tab-font-size: var(--font-ui-smaller);
+  --gt-tab-font-family: var(--font-default);
+  --gt-tab-font-weight: bold;
+  --gt-tab-fill: var(--text-normal);
+  --gt-tab-staff-line-fill: var(--text-faint);
 }
 
 /* MARK: Chords

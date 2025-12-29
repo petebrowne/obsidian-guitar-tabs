@@ -40,8 +40,8 @@ export function getChord(notes: Note[]): Chord | undefined {
 export function collectChords(track: Track): Chord[] {
   const chords: Chord[] = [];
   for (const measure of track.measures) {
-    for (const beat of measure.beats) {
-      const chord = getChord(beat.notes);
+    for (const event of measure.events) {
+      const chord = getChord(event.notes);
       if (chord != null) {
         chords.push(chord);
       }

@@ -1,5 +1,11 @@
-import type { Note, Tuning } from "src/music/types";
 import { STANDARD_TUNING } from "./constants";
+import {
+  type Duration,
+  DurationValue,
+  type Event,
+  type Note,
+  type Tuning,
+} from "./types";
 
 export function isStandardTuning(tuning: Tuning): boolean {
   return (
@@ -60,4 +66,36 @@ export function getBarre(notes: Note[]): Barre | undefined {
     return undefined;
   }
   return barre;
+}
+
+export function durationToUnits(duration: Duration | DurationValue): number {
+  if (typeof duration === "number") {
+    return 1 / duration;
+  }
+  let base = 1 / duration.value;
+  if (duration.dotted) base *= 1.5;
+  if (duration.tuplet) base *= duration.tuplet.inTimeOf / duration.tuplet.count;
+  return base;
+}
+
+export function groupEventsByBeat(
+  events: Event[],
+  beatDuration: Duration = { value: DurationValue.QUARTER },
+): Event[][] {
+  const beatUnits = durationToUnits(beatDuration);
+  let currentBeat: Event[] = [];
+  let prevBeatIndex = 0;
+  let totalUnits = 0;
+  const beats: Event[][] = [currentBeat];
+  for (const event of events) {
+    const nextBeatIndex = Math.floor(totalUnits / beatUnits);
+    if (nextBeatIndex !== prevBeatIndex) {
+      currentBeat = [];
+      prevBeatIndex = nextBeatIndex;
+      beats.push(currentBeat);
+    }
+    totalUnits += durationToUnits(event.duration);
+    currentBeat.push(event);
+  }
+  return beats;
 }

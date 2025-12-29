@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { DROP_D_TUNING, STANDARD_TUNING, UKELELE_TUNING } from "./constants";
+import {
+  DROP_D_TUNING,
+  STANDARD_TUNING,
+  UKELELE_TUNING,
+} from "./music/constants";
 import { getPitch } from "./music/pitch";
-import { Duration } from "./music/types";
-import { parseBeat, parseTuning } from "./parsing";
+import { DurationValue } from "./music/types";
+import { parseEvent, parseTuning } from "./parsing";
 
 describe("parseTuning", () => {
   it("parses explicit tuning", () => {
@@ -33,11 +37,11 @@ describe("parseTuning", () => {
   });
 });
 
-describe("parseBeat", () => {
+describe("parseEvent", () => {
   it("parses basic notes", () => {
-    expect(parseBeat("0 2 2 1 0 0")).toEqual({
+    expect(parseEvent("0 2 2 1 0 0")).toEqual({
       id: expect.any(String),
-      duration: Duration.QUARTER,
+      duration: DurationValue.QUARTER,
       dotted: undefined,
       notes: [
         { stringIndex: 0, fret: 0, pitch: getPitch("E2") },
@@ -51,9 +55,9 @@ describe("parseBeat", () => {
   });
 
   it("parses muted and skipped strings", () => {
-    expect(parseBeat("- 3 x 5 4 3")).toEqual({
+    expect(parseEvent("- 3 x 5 4 3")).toEqual({
       id: expect.any(String),
-      duration: Duration.QUARTER,
+      duration: DurationValue.QUARTER,
       dotted: undefined,
       notes: [
         { stringIndex: 1, fret: 3, pitch: getPitch("C3") },
@@ -65,19 +69,19 @@ describe("parseBeat", () => {
     });
   });
 
-  it("parses incomplete beats", () => {
-    expect(parseBeat("- - 2")).toEqual({
+  it("parses incomplete events", () => {
+    expect(parseEvent("- - 2")).toEqual({
       id: expect.any(String),
-      duration: Duration.QUARTER,
+      duration: DurationValue.QUARTER,
       dotted: undefined,
       notes: [{ stringIndex: 2, fret: 2, pitch: getPitch("E3") }],
     });
   });
 
-  it("parses beat durations", () => {
-    expect(parseBeat("- 2 / 8")).toEqual({
+  it("parses event durations", () => {
+    expect(parseEvent("- 2 / 8")).toEqual({
       id: expect.any(String),
-      duration: Duration.EIGHTH,
+      duration: DurationValue.EIGHTH,
       dotted: undefined,
       notes: [{ stringIndex: 1, fret: 2, pitch: getPitch("B2") }],
     });

@@ -18,12 +18,15 @@ export interface Track {
   measures: Measure[];
 }
 
-export type TimeSignature = [number, number];
+export interface TimeSignature {
+  beats: number;
+  beatValue: DurationValue;
+}
 
 export interface Measure {
   id: string;
   timeSignature: TimeSignature;
-  beats: Beat[];
+  events: Event[];
 }
 
 export interface MutedString {
@@ -40,7 +43,7 @@ export interface FrettedNote {
 
 export type Note = MutedString | FrettedNote;
 
-export const Duration = {
+export const DurationValue = {
   WHOLE: 1,
   HALF: 2,
   QUARTER: 4,
@@ -49,11 +52,21 @@ export const Duration = {
   THIRTY_SECOND: 32,
   SIXTY_FOURTH: 64,
 };
-export type Duration = (typeof Duration)[keyof typeof Duration];
+export type DurationValue = (typeof DurationValue)[keyof typeof DurationValue];
 
-export interface Beat {
+export interface Tuplet {
+  count: number;
+  inTimeOf: number;
+}
+
+export interface Duration {
+  value: DurationValue;
+  dotted?: boolean;
+  tuplet?: Tuplet;
+}
+
+export interface Event {
   id: string;
   duration: Duration;
-  dotted?: boolean;
   notes: Note[];
 }

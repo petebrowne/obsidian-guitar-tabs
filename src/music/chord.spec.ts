@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseBeat } from "../parsing";
+import { parseEvent } from "../parsing";
 import { getChord } from "./chord";
 
 describe("getChord", () => {
@@ -12,6 +12,6 @@ describe("getChord", () => {
     ["2 x 0 2 3 2", "D"],
     ["- 0 2 2 0 0", "Asus2"],
   ])("returns the correct chord for %s", (notes, name) => {
-    expect(getChord(parseBeat(notes).notes)?.name).toEqual(name);
+    expect(getChord(parseEvent(notes).notes)?.name).toEqual(name);
   });
 });

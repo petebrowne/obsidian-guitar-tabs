@@ -3,11 +3,12 @@ import {
   STANDARD_TIME_SIGNATURE,
   STANDARD_TUNING,
   UKELELE_TUNING,
-} from "./constants";
+} from "./music/constants";
 import { getPitch } from "./music/pitch";
 import {
-  type Beat,
-  Duration,
+  type Duration,
+  DurationValue,
+  type Event,
   type Measure,
   type Note,
   type TimeSignature,
@@ -19,7 +20,7 @@ import { generateId, isNonNullable } from "./utils";
 interface TrackOptions {
   tuning: Tuning;
   capo: number | undefined;
-  duration: Duration;
+  duration: DurationValue;
   timeSignature: TimeSignature;
 }
 
@@ -27,14 +28,14 @@ export function parseTab(input: string): Track {
   const trackOptions: TrackOptions = {
     tuning: STANDARD_TUNING,
     capo: undefined,
-    duration: Duration.QUARTER,
+    duration: DurationValue.QUARTER,
     timeSignature: STANDARD_TIME_SIGNATURE,
   };
   const measures: Measure[] = [];
   let measure: Measure = {
     id: generateId("measure"),
     timeSignature: STANDARD_TIME_SIGNATURE,
-    beats: [],
+    events: [],
   };
   measures.push(measure);
   for (const inputLine of input.split("\n")) {
@@ -48,24 +49,24 @@ export function parseTab(input: string): Track {
       continue;
     }
     if (isDurationLine(line)) {
-      trackOptions.duration = parseDuration(line);
+      trackOptions.duration = parseDurationValue(line);
       continue;
     }
     if (line === "") {
       measure = {
         id: generateId("measure"),
         timeSignature: trackOptions.timeSignature,
-        beats: [],
+        events: [],
       };
       measures.push(measure);
       continue;
     }
-    measure.beats.push(parseBeat(line, trackOptions));
+    measure.events.push(parseEvent(line, trackOptions));
   }
   return {
     tuning: trackOptions.tuning,
     capo: trackOptions.capo,
-    measures: measures.filter((measure) => measure.beats.length > 0),
+    measures: measures.filter((measure) => measure.events.length > 0),
   };
 }
 
@@ -114,7 +115,7 @@ function isDurationLine(input: string): boolean {
   return input.toUpperCase().startsWith("DURATION: ");
 }
 
-function parseDuration(input: string): Duration {
+function parseDurationValue(input: string): DurationValue {
   const duration = input.toUpperCase().replace("DURATION: ", "").trim();
   if (duration.endsWith("64")) return 64;
   if (duration.endsWith("32")) return 32;
@@ -126,39 +127,33 @@ function parseDuration(input: string): Duration {
   throw new Error(`Unknown duration: ${duration}`);
 }
 
-export function parseBeat(
+export function parseEvent(
   input: string,
   {
     tuning = STANDARD_TUNING,
     capo = 0,
-    duration = Duration.QUARTER,
+    duration = DurationValue.QUARTER,
   }: Partial<TrackOptions> = {},
-): Beat {
+): Event {
   const [noteInputs, durationInput] = input.split("/");
   if (noteInputs == null) {
-    throw new Error(`Invalid beat input: "${input}"`);
+    throw new Error(`Invalid event input: "${input}"`);
   }
-  const parsedDuration = parseBeatDuration(durationInput);
+  const parsedDuration = parseEventDuration(durationInput);
   const notes: Note[] = noteInputs
     .split(/\s+/)
     .map((value, index) => parseNote(index, value, { tuning, capo }))
     .filter(isNonNullable);
   return {
-    id: generateId("beat"),
-    duration: parsedDuration?.duration ?? duration,
-    dotted: parsedDuration?.dotted,
+    id: generateId("event"),
+    duration: parsedDuration ?? { value: duration },
     notes,
   };
 }
 
-interface ParsedTabBeatDuration {
-  duration: Duration;
-  dotted?: boolean;
-}
-
-function parseBeatDuration(
+function parseEventDuration(
   input: string | null | undefined,
-): ParsedTabBeatDuration | undefined {
+): Duration | undefined {
   if (input == null) return undefined;
 
   const [duration, dotted] = input.split(".");
@@ -166,7 +161,7 @@ function parseBeatDuration(
 
   try {
     return {
-      duration: parseDuration(duration),
+      value: parseDurationValue(duration),
       dotted: dotted !== undefined ? true : undefined,
     };
   } catch (_error) {

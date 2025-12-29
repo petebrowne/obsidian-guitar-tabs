@@ -1,8 +1,9 @@
-import { chunk, range } from "es-toolkit/compat";
+import { range } from "es-toolkit/compat";
 import { ChordDiagram } from "./chord-diagram";
 import { collectChords } from "./music/chord";
 import type { Measure, Track } from "./music/types";
 import { isStandardTuning } from "./music/utils";
+import { TabTrack } from "./tabs/tab-track";
 import { ordinalize } from "./utils";
 
 interface TabTrackViewViewProps {
@@ -21,14 +22,15 @@ export function TabTrackView({ track }: TabTrackViewViewProps) {
           ))}
         </div>
       )}
+      <TabTrack track={track} />
       {/* <TabViewer track={track} /> */}
-      {chunk(track.measures, 2).map((measures, index) => (
+      {/* {chunk(track.measures, 2).map((measures, index) => (
         <TabStaffView
           key={`${measures[0]?.id}-${measures[1]?.id}`}
           measures={measures}
           stringCount={track.tuning.length}
         />
-      ))}
+      ))} */}
     </div>
   );
 }
@@ -82,7 +84,7 @@ interface StaffViewProps {
   stringCount: number;
 }
 
-function TabStaffView({ measures, stringCount = 6 }: StaffViewProps) {
+function _TabStaffView({ measures, stringCount = 6 }: StaffViewProps) {
   const lineSpacing = 100 / (stringCount - 1);
   return (
     <div className="gt-staff">
@@ -114,15 +116,15 @@ interface TabMeasureViewProps {
 function TabMeasureView({ measure, stringCount }: TabMeasureViewProps) {
   return (
     <div className="gt-measure">
-      {measure.beats.map((beat) => (
+      {measure.events.map((event) => (
         <div
-          key={beat.id}
+          key={event.id}
           className="gt-beat"
-          data-duration={beat.duration}
-          data-dotted={beat.dotted ? "true" : undefined}
+          data-duration={event.duration.value}
+          data-dotted={event.duration.dotted ? "true" : undefined}
         >
           {range(0, stringCount).map((stringIndex) => {
-            const note = beat.notes.find(
+            const note = event.notes.find(
               (note) => note.stringIndex === stringIndex,
             );
             return (
