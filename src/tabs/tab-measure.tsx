@@ -18,6 +18,16 @@ export function TabMeasure({ measure, staffHeight }: TabMeasureProps) {
         height={staffHeight}
         fill="var(--gt-tab-fill, black)"
       />
+      {measure.lastOnStaff && (
+        <rect
+          className="gt-tab-measure-end"
+          x={measure.x + measure.width - 1}
+          y={0}
+          width={1}
+          height={staffHeight}
+          fill="var(--gt-tab-fill, black)"
+        />
+      )}
       <TabRhythm measure={measure} staffHeight={staffHeight} />
       {measure.events.map((event) => (
         <TabEvent key={event.id} event={event} />

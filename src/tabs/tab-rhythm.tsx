@@ -47,14 +47,14 @@ export function TabRhythm({ measure, staffHeight }: TabRhythmProps) {
               className="gt-tab-rhythm-beam"
               x={
                 beam.type === RhythmBeamType.PARTIAL_LEFT
-                  ? event.x - event.width / 2
+                  ? event.x - event.width / 3
                   : event.x
               }
               y={stemY2 - getBeamYOffset(beam.level)}
               width={
                 beam.type === RhythmBeamType.CONNECTED
                   ? event.width
-                  : event.width / 2
+                  : event.width / 3
               }
               height={BEAM_HEIGHT}
               style={{

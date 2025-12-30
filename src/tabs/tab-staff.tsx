@@ -8,7 +8,7 @@ interface TabStaffProps {
 
 export function TabStaff({ staff }: TabStaffProps) {
   const totalWidth = sum(staff.measures.map((measure) => measure.width));
-  const totalHeight = staff.height + 20;
+  const totalHeight = staff.height + 23;
   return (
     <svg
       viewBox={`0 0 ${totalWidth} ${totalHeight}`}

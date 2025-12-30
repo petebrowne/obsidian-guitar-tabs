@@ -9,7 +9,7 @@ import "./preview.css";
 function App() {
   return (
     <div className="preview-container">
-      <ChordTrackView
+      <TabTrackView
         track={parseTab(
           `
 - 0 2 2 2 0
@@ -56,6 +56,11 @@ function App() {
 12 /16
 12 /16
 12 /16
+
+0 /1
+
+0 /2
+0 /2
 `)}
       />
       <TabTrackView

@@ -1,6 +1,12 @@
 /* MARK: General
    -------------------------------------------------------------------------- */
 
+.gt-tab-track-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
 .gt-info {
   display: flex;
   flex-direction: row;
@@ -8,6 +14,7 @@
   justify-content: center;
   gap: 2em;
   font-size: var(--font-ui-smaller);
+  margin: 0;
 
   & > div {
     display: flex;
@@ -27,118 +34,7 @@
   }
 }
 
-/* MARK: Tabs (version 1)
-   -------------------------------------------------------------------------- */
-
-.gt-tab-track {
-  padding-block: 2em;
-  padding-inline: 0.5em;
-}
-
-.gt-tab-track > *:not(:last-child) {
-  margin-bottom: 3em;
-}
-
-.gt-staff {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-}
-
-.gt-staff-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-width: 1px;
-  border-style: solid;
-  border-color: var(--background-modifier-border);
-}
-
-.gt-staff-line {
-  position: absolute;
-  width: 100%;
-  height: 1px;
-  background-color: var(--background-modifier-border);
-  z-index: 1;
-}
-
-.gt-measure {
-  padding-inline-start: 1em;
-  border-width: 0;
-  border-inline-end-width: 1px;
-  border-style: solid;
-  border-color: var(--text-faint);
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  position: relative;
-  z-index: 2;
-}
-
-.gt-beat {
-  margin-block-start: -0.35em;
-  margin-block-end: -0.35em;
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-  gap: 0.75em;
-  position: relative;
-  --gt-beat-duration: 1;
-  --gt-beat-dotted: 1;
-  margin-inline-end: calc(
-    var(--gt-beat-duration) *
-    var(--gt-beat-dotted) *
-    0.15em
-  );
-
-  &[data-dotted="true"] {
-    --gt-beat-dotted: 1.5;
-  }
-
-  &[data-duration="1"] {
-    --gt-beat-duration: 64;
-  }
-
-  &[data-duration="2"] {
-    --gt-beat-duration: 32;
-  }
-
-  &[data-duration="4"] {
-    --gt-beat-duration: 16;
-  }
-
-  &[data-duration="8"] {
-    --gt-beat-duration: 8;
-  }
-
-  &[data-duration="16"] {
-    --gt-beat-duration: 4;
-  }
-
-  &[data-duration="32"] {
-    --gt-beat-duration: 2;
-  }
-}
-
-.gt-string {
-  height: 1em;
-  padding-inline: 0.25em;
-  line-height: 1em;
-  background-color: var(--background-primary);
-  text-align: center;
-  font-size: var(--font-ui-smaller);
-  font-weight: bold;
-  font-family: var(--font-monospace);
-}
-
-.gt-string:empty {
-  padding: 0;
-}
-
-/* MARK: Tabs (version 2)
+/* MARK: Tabs
    -------------------------------------------------------------------------- */
 
 .gt-tab-track {
@@ -148,6 +44,11 @@
   --gt-tab-font-weight: bold;
   --gt-tab-fill: var(--text-normal);
   --gt-tab-staff-line-fill: var(--text-faint);
+
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+  padding-block: 1em;
 }
 
 /* MARK: Chords
@@ -167,7 +68,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5em;
+  gap: 0.125em;
   margin: 0;
   padding: 0;
 

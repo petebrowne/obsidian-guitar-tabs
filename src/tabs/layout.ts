@@ -1,4 +1,4 @@
-import { range } from "es-toolkit/compat";
+import { range, sum } from "es-toolkit/compat";
 import {
   type Duration,
   DurationValue,
@@ -8,11 +8,11 @@ import {
   type Track,
 } from "../music/types";
 import { durationToUnits, groupEventsByBeat } from "../music/utils";
-import { generateId, isNonNullable } from "../utils";
+import { generateId, isNonNullable, withWindow } from "../utils";
 
 interface LayoutTrackOptions {
-  optimalQuarterNoteWidth?: number;
   staffLineHeight?: number;
+  measurePadding?: number;
   layoutWidth?: number;
   beatDuration?: Duration;
 }
@@ -20,8 +20,8 @@ interface LayoutTrackOptions {
 export function layoutTrack(
   { measures, ...track }: Track,
   {
-    optimalQuarterNoteWidth = 44,
     staffLineHeight = 14,
+    measurePadding = 20,
     beatDuration = { value: DurationValue.QUARTER },
     layoutWidth = 800,
   }: LayoutTrackOptions = {},
@@ -32,58 +32,119 @@ export function layoutTrack(
   }));
   const staffHeight = (staffLineCount - 1) * staffLineHeight + 1;
 
-  let currentX = 0;
+  // 1. Initial width measurements
   const laidOutMeasures: LaidOutMeasure[] = measures.map(
     ({ events, ...measure }) => {
-      const measureX = currentX;
-      currentX += optimalQuarterNoteWidth / 2;
+      let measureX = measurePadding;
       const laidOutEvents: LaidOutEvent[] = [];
       const groupedEvents = groupEventsByBeat(events, beatDuration);
       for (const { notes, ...event } of layoutBeams(groupedEvents)) {
-        const eventWidth = getDurationWidth(
-          event.duration,
-          optimalQuarterNoteWidth,
-        );
+        const eventWidth = getDurationWidth(event.duration);
         laidOutEvents.push({
           ...event,
           notes: notes.map((note) => ({
             note,
             y: (staffLineCount - note.stringIndex - 1) * staffLineHeight,
           })),
-          x: currentX,
+          x: measureX,
           width: eventWidth,
         });
-        currentX += eventWidth;
+        measureX += eventWidth;
       }
       return {
         ...measure,
-        x: measureX,
-        width: currentX - measureX,
+        x: 0,
+        width: measureX,
         events: laidOutEvents,
+        lastOnStaff: false,
       };
     },
   );
-  return {
-    ...track,
-    staffs: [
-      {
+
+  // 2. Layout staffs to determine number of measures per staff
+  let currentStaff: LaidOutStaff = {
+    id: generateId("staff"),
+    measures: [],
+    lines: staffLines,
+    height: staffHeight,
+  };
+  const staffs: LaidOutStaff[] = [currentStaff];
+  let currentStaffWidth = 0;
+  for (const [prevMeasure, measure, nextMeasure] of withWindow(
+    laidOutMeasures,
+  )) {
+    if (currentStaffWidth + measure.width > layoutWidth) {
+      if (prevMeasure) {
+        prevMeasure.lastOnStaff = true;
+      }
+      currentStaff = {
         id: generateId("staff"),
-        measures: laidOutMeasures,
+        measures: [],
         lines: staffLines,
         height: staffHeight,
-      },
-    ],
-  };
+      };
+      staffs.push(currentStaff);
+      currentStaffWidth = 0;
+    }
+    currentStaff.measures.push(measure);
+    currentStaffWidth += measure.width;
+    if (nextMeasure == null) {
+      measure.lastOnStaff = true;
+    }
+  }
+
+  // 3. Finalize x positions and widths to fit within layout width
+  for (const staff of staffs) {
+    const staffWidth = sum(staff.measures.map((measure) => measure.width));
+    const scale = layoutWidth / staffWidth;
+    if (staff.measures.length === 1 && scale > 2) {
+      continue;
+    }
+
+    let x = 0;
+    for (const measure of staff.measures) {
+      measure.x = x;
+      x += measurePadding * scale;
+      for (const event of measure.events) {
+        event.x = x;
+        const eventWidth = getDurationWidth(event.duration) * scale;
+        x += eventWidth;
+        event.width = eventWidth;
+      }
+      measure.width = x - measure.x;
+    }
+  }
+  return { ...track, staffs };
 }
 
 // MARK: Layout Utils
 // ----------------------------------------------------------------------------
 
+interface DurationWidthOptions {
+  minUnits?: number;
+  minWidth?: number;
+  exponent?: number;
+}
+
 function getDurationWidth(
   duration: Duration,
-  optimalQuarterNoteWidth: number,
+  {
+    minUnits = 1 / 32,
+    minWidth = 20,
+    exponent = 0.3,
+  }: DurationWidthOptions = {},
 ): number {
-  return (durationToUnits(duration) / 0.25) * optimalQuarterNoteWidth;
+  const units = durationToUnits(duration);
+
+  // Normalize relative to smallest unit
+  const relative = units / minUnits;
+
+  // Apply perceptual scaling
+  const scaled = relative ** exponent;
+
+  // Apply growth scale
+  const result = minWidth * scaled;
+  return Math.round(Math.max(result, minWidth));
 }
 
 function layoutBeams(groupedEvents: Event[][]): EventWithBeams[] {
@@ -154,6 +215,7 @@ export type LaidOutMeasure = Omit<Measure, "events"> & {
   events: LaidOutEvent[];
   x: number;
   width: number;
+  lastOnStaff: boolean;
 };
 
 export const RhythmBeamType = {

@@ -1,7 +1,6 @@
-import { range } from "es-toolkit/compat";
 import { ChordDiagram } from "./chord-diagram";
 import { collectChords } from "./music/chord";
-import type { Measure, Track } from "./music/types";
+import type { Track } from "./music/types";
 import { isStandardTuning } from "./music/utils";
 import { TabTrack } from "./tabs/tab-track";
 import { ordinalize } from "./utils";
@@ -13,7 +12,7 @@ interface TabTrackViewViewProps {
 export function TabTrackView({ track }: TabTrackViewViewProps) {
   const chords = collectChords(track);
   return (
-    <div className="gt-tab-track">
+    <div className="gt-tab-track-view">
       <TabInfoView track={track} />
       {chords.length > 0 && (
         <div className="gt-diagrams">
@@ -23,14 +22,6 @@ export function TabTrackView({ track }: TabTrackViewViewProps) {
         </div>
       )}
       <TabTrack track={track} />
-      {/* <TabViewer track={track} /> */}
-      {/* {chunk(track.measures, 2).map((measures, index) => (
-        <TabStaffView
-          key={`${measures[0]?.id}-${measures[1]?.id}`}
-          measures={measures}
-          stringCount={track.tuning.length}
-        />
-      ))} */}
     </div>
   );
 }
@@ -76,65 +67,5 @@ function TabInfoView({ track }: TabInfoViewProps) {
         </div>
       )}
     </dl>
-  );
-}
-
-interface StaffViewProps {
-  measures: Measure[];
-  stringCount: number;
-}
-
-function _TabStaffView({ measures, stringCount = 6 }: StaffViewProps) {
-  const lineSpacing = 100 / (stringCount - 1);
-  return (
-    <div className="gt-staff">
-      <div className="gt-staff-bar" aria-hidden="true" role="presentation">
-        {range(1, stringCount - 1).map((line) => (
-          <div
-            key={line}
-            className="gt-staff-line"
-            style={{ top: `${lineSpacing * line}%` }}
-          />
-        ))}
-      </div>
-      {measures.map((measure) => (
-        <TabMeasureView
-          key={measure.id}
-          measure={measure}
-          stringCount={stringCount}
-        />
-      ))}
-    </div>
-  );
-}
-
-interface TabMeasureViewProps {
-  measure: Measure;
-  stringCount: number;
-}
-
-function TabMeasureView({ measure, stringCount }: TabMeasureViewProps) {
-  return (
-    <div className="gt-measure">
-      {measure.events.map((event) => (
-        <div
-          key={event.id}
-          className="gt-beat"
-          data-duration={event.duration.value}
-          data-dotted={event.duration.dotted ? "true" : undefined}
-        >
-          {range(0, stringCount).map((stringIndex) => {
-            const note = event.notes.find(
-              (note) => note.stringIndex === stringIndex,
-            );
-            return (
-              <div key={stringIndex} className="gt-string">
-                {note ? (note.muted ? "×" : note.fret) : null}
-              </div>
-            );
-          })}
-        </div>
-      ))}
-    </div>
   );
 }
